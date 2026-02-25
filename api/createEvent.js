@@ -28,10 +28,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing required fields: title, actors, type, time' });
   }
 
+  // 确保 actors 是数组格式
+  const actorsArray = Array.isArray(actors) ? actors : [actors];
+
   try {
     const { data, error } = await supabase
       .from('events')
-      .insert([{ title, actors, type, description, source, time }])
+      .insert([{ title, actors: actorsArray, type, description, source, time }])
       .select();
 
     if (error) {
