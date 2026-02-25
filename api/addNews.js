@@ -6,28 +6,31 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  // 仅允许 POST 请求
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  // CORS 头
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // 处理 OPTIONS 预检请求
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  const { title, source, published_at, content } = req.body;
+  if (req.method === 'POST') {
+    const { title, source, published_at, content } = req.body;
 
-  // 简单验证
-  if (!title || !source || !published_at) {
-    return res.status(400).json({ error: 'Missing required fields' });
+    const { data, error } = await supabase
+      .from('news')
+      .insert([{ title, source, published_at, content }])
+      .select();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+    res.status(200).json(data);
+  } else {
+    // 如果不是 POST 请求，返回 405
+    res.status(405).json({ error: 'Method not allowed' });
   }
-
-  // 插入新闻数据（content 可为空）
-  const { data, error } = await supabase
-    .from('news')
-    .insert([{ title, source, published_at, content }])
-    .select();
-
-  if (error) {
-    console.error('Insert error:', error);
-    return res.status(500).json(error);
-  }
-
-  res.status(200).json(data);
 }
