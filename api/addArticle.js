@@ -19,16 +19,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { title, content } = req.body;
+  const { event_id, paradigm, reason } = req.body;
 
-  if (!title || !content) {
-    return res.status(400).json({ error: 'Missing required fields: title, content' });
+  if (!event_id || !paradigm) {
+    return res.status(400).json({ error: 'Missing required fields: event_id, paradigm' });
+  }
+
+  // 验证 paradigm 是否合法
+  const validParadigms = ['win_win', 'zero_sum', 'unclear'];
+  if (!validParadigms.includes(paradigm)) {
+    return res.status(400).json({ error: 'Invalid paradigm value. Must be win_win, zero_sum, or unclear' });
   }
 
   try {
     const { data, error } = await supabase
-      .from('articles')
-      .insert([{ title, content }])
+      .from('paradigms')
+      .insert([{ event_id, paradigm, reason }])
       .select();
 
     if (error) {
