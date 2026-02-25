@@ -19,23 +19,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { code, hidden_desc } = req.body;
+  const { title, content } = req.body;
 
-  if (!code) {
-    return res.status(400).json({ error: 'Missing required field: code' });
+  if (!title || !content) {
+    return res.status(400).json({ error: 'Missing required fields: title, content' });
   }
 
   try {
-    // 构建更新对象，如果 hidden_desc 为 undefined，则保持原样
-    const updates = {};
-    if (hidden_desc !== undefined) {
-      updates.hidden_desc = hidden_desc;
-    }
-
     const { data, error } = await supabase
-      .from('countries')
-      .update(updates)
-      .eq('code', code)
+      .from('articles')
+      .insert([{ title, content }])
       .select();
 
     if (error) {
