@@ -19,22 +19,23 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { event_id, paradigm, reason } = req.body;
+  const { code, hidden_desc } = req.body;
 
-  if (!event_id || !paradigm) {
-    return res.status(400).json({ error: 'Missing required fields: event_id, paradigm' });
-  }
-
-  // 验证 paradigm 是否合法
-  const validParadigms = ['win_win', 'zero_sum', 'unclear'];
-  if (!validParadigms.includes(paradigm)) {
-    return res.status(400).json({ error: 'Invalid paradigm value. Must be win_win, zero_sum, or unclear' });
+  if (!code) {
+    return res.status(400).json({ error: 'Missing required field: code' });
   }
 
   try {
+    // 构建更新对象，如果 hidden_desc 为 undefined，则保持原样
+    const updates = {};
+    if (hidden_desc !== undefined) {
+      updates.hidden_desc = hidden_desc;
+    }
+
     const { data, error } = await supabase
-      .from('paradigms')
-      .insert([{ event_id, paradigm, reason }])
+      .from('countries')
+      .update(updates)
+      .eq('code', code)
       .select();
 
     if (error) {
